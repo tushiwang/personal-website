@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>王嘉琪 · 应用物理学 × 计算机</title>
+    <style>
+        /* ============================================
+           基础重置与设计变量
+           ============================================ */
+        :root {
+            --bg: #fafafa;
+            --text: #1a1a1a;
+            --text-secondary: #555555;
+            --text-muted: #888888;
+            --line: #d0d0d0;
+            --line-light: #e5e5e5;
+            --accent: #1e3a5f; /* 低饱和深蓝 */
+            --mono: "SF Mono", "Cascadia Code", "Consolas", "Courier New", monospace;
+            --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+            --max-width: 720px;
+            --section-gap: 80px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            background-color: var(--bg);
+            color: var(--text);
+            font-family: var(--sans);
+            font-size: 16px;
+            line-height: 1.7;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* ============================================
+           侧边导航（像文档目录）
+           ============================================ */
+        .side-nav {
+            position: fixed;
+            left: 28px;
+            top: 50%;
+            transform: translateY(-50%);
+            z-index: 100;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+
+        .side-nav a {
+            color: var(--text-muted);
+            text-decoration: none;
+            font-family: var(--mono);
+            font-size: 11px;
+            letter-spacing: 0.08em;
+            transition: color 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .side-nav a::before {
+            content: "";
+            width: 12px;
+            height: 1px;
+            background-color: var(--line);
+            transition: background-color 0.2s ease, width 0.2s ease;
+        }
+
+        .side-nav a:hover {
+            color: var(--accent);
+        }
+
+        .side-nav a:hover::before {
+            background-color: var(--accent);
+            width: 20px;
+        }
+
+        /* ============================================
+           主容器
+           ============================================ */
+        .container {
+            max-width: var(--max-width);
+            margin: 0 auto;
+            padding: 0 32px;
+        }
+
+        /* ============================================
+           第一屏：身份定位
+           ============================================ */
+        .hero {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            position: relative;
+        }
+
+        .hero-index {
+            position: absolute;
+            top: 40px;
+            left: 0;
+            font-family: var(--mono);
+            font-size: 12px;
+            color: var(--text-muted);
+            letter-spacing: 0.1em;
+        }
+
+        .hero-index span {
+            margin: 0 10px;
+            color: var(--line);
+        }
+
+        .hero-name {
+            font-size: 56px;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+            margin-bottom: 4px;
+            color: var(--text);
+        }
+
+        .hero-divider {
+            width: 60px;
+            height: 2px;
+            background-color: var(--accent);
+            margin: 24px 0 32px 0;
+        }
+
+        .hero-meta {
+            font-family: var(--mono);
+            font-size: 14px;
+            color: var(--text-secondary);
+            line-height: 2.2;
+        }
+
+        .hero-meta .label {
+            color: var(--text-muted);
+            font-size: 12px;
+            letter-spacing: 0.06em;
+        }
+
+        .hero-meta .accent {
+            color: var(--accent);
+            font-weight: 600;
+        }
+
+        /* 第一屏底部的细线 */
+        .hero-bottom-line {
+            position: absolute;
+            bottom: 60px;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background-color: var(--line-light);
+        }
+
+        .hero-bottom-line::after {
+            content: "↓ 向下滚动";
+            position: absolute;
+            right: 0;
+            top: 10px;
+            font-family: var(--mono);
+            font-size: 10px;
+            color: var(--text-muted);
+            letter-spacing: 0.08em;
+        }
+
+        /* ============================================
+           通用区块样式
+           ============================================ */
+        .section {
+            padding: var(--section-gap) 0;
+            border-top: 1px solid var(--line);
+            position: relative;
+        }
+
+        .section-label {
+            font-family: var(--mono);
+            font-size: 11px;
+            color: var(--text-muted);
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            margin-bottom: 28px;
+        }
+
+        .section-label::before {
+            content: "// ";
+            color: var(--line);
+        }
+
+        /* ============================================
+           第二屏：关于我（代码注释风格）
+           ============================================ */
+        .code-block {
+            font-family: var(--mono);
+            font-size: 14px;
+            line-height: 2.1;
+            color: var(--text-secondary);
+        }
+
+        .code-block .comment {
+            color: var(--text-muted);
+        }
+
+        .code-block .keyword {
+            color: var(--accent);
+        }
+
+        .code-block .string {
+            color: var(--text);
+        }
+
+        .code-block .indent {
+            padding-left: 22px;
+            display: block;
+        }
+
+        /* ============================================
+           第三屏：技能栈
+           ============================================ */
+        .stack-layer {
+            border-bottom: 1px solid var(--line-light);
+            padding: 24px 0;
+            display: flex;
+            gap: 24px;
+            align-items: flex-start;
+        }
+
+        .stack-layer:last-child {
+            border-bottom: none;
+        }
+
+        .stack-level {
+            font-family: var(--mono);
+            font-size: 12px;
+            color: var(--accent);
+            letter-spacing: 0.06em;
+            min-width: 110px;
+            flex-shrink: 0;
+            padding-top: 3px;
+        }
+
+        .stack-content {
+            font-size: 15px;
+            color: var(--text-secondary);
+        }
+
+        .stack-content .sep {
+            color: var(--line);
+            margin: 0 8px;
+        }
+
+        /* ============================================
+           第四屏：项目条目
+           ============================================ */
+        .project {
+            border-left: 2px solid var(--line);
+            padding: 8px 0 8px 24px;
+            margin-bottom: 36px;
+            transition: border-color 0.2s ease;
+        }
+
+        .project:hover {
+            border-left-color: var(--accent);
+        }
+
+        .project-title {
+            font-family: var(--mono);
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text);
+            margin-bottom: 6px;
+        }
+
+        .project-title .tag {
+            font-weight: 400;
+            font-size: 12px;
+            color: var(--accent);
+            margin-left: 12px;
+        }
+
+        .project-meta {
+            font-size: 14px;
+            color: var(--text-secondary);
+            line-height: 1.8;
+            margin-top: 4px;
+        }
+
+        .project-meta .key {
+            font-family: var(--mono);
+            font-size: 12px;
+            color: var(--text-muted);
+            letter-spacing: 0.04em;
+        }
+
+        .project-link {
+            display: inline-block;
+            margin-top: 10px;
+            font-family: var(--mono);
+            font-size: 12px;
+            color: var(--accent);
+            text-decoration: none;
+            border-bottom: 1px solid var(--line);
+            padding-bottom: 2px;
+            transition: border-color 0.2s ease;
+        }
+
+        .project-link:hover {
+            border-bottom-color: var(--accent);
+        }
+
+        /* ============================================
+           第五屏：动机声明
+           ============================================ */
+        .statement-wrapper {
+            display: flex;
+            gap: 24px;
+        }
+
+        .statement-bar {
+            width: 3px;
+            background-color: var(--accent);
+            flex-shrink: 0;
+        }
+
+        .statement-text {
+            font-size: 17px;
+            line-height: 2.1;
+            color: var(--text);
+            font-weight: 400;
+        }
+
+        .statement-text em {
+            font-style: normal;
+            color: var(--accent);
+            font-weight: 500;
+        }
+
+        /* ============================================
+           第六屏：联系区
+           ============================================ */
+        .contact {
+            padding: var(--section-gap) 0;
+            border-top: 1px solid var(--line);
+            text-align: center;
+        }
+
+        .contact-email {
+            font-family: var(--mono);
+            font-size: 15px;
+            color: var(--text);
+            text-decoration: none;
+            border-bottom: 1px solid var(--line);
+            padding-bottom: 3px;
+            transition: border-color 0.2s ease;
+        }
+
+        .contact-email:hover {
+            border-bottom-color: var(--accent);
+            color: var(--accent);
+        }
+
+        .contact-comment {
+            font-family: var(--mono);
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-top: 20px;
+            line-height: 2;
+        }
+
+        /* ============================================
+           响应式：移动端
+           ============================================ */
+        @media (max-width: 600px) {
+            .side-nav {
+                display: none;
+            }
+
+            .hero-name {
+                font-size: 40px;
+            }
+
+            .hero-meta {
+                font-size: 12px;
+            }
+
+            .stack-layer {
+                flex-direction: column;
+                gap: 8px;
+            }
+
+            .stack-level {
+                min-width: auto;
+            }
+
+            .container {
+                padding: 0 20px;
+            }
+
+            :root {
+                --section-gap: 56px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ==================== 侧边导航 ==================== -->
+    <nav class="side-nav">
+        <a href="#about">关于</a>
+        <a href="#skills">技能</a>
+        <a href="#projects">项目</a>
+        <a href="#motive">动机</a>
+        <a href="#contact">联系</a>
+    </nav>
+
+    <!-- ==================== 主容器 ==================== -->
+    <div class="container">
+
+        <!-- ========== 第一屏：身份定位 ========== -->
+        <header class="hero" id="top">
+            <div class="hero-index">
+                WJQ <span>/</span> 2026 <span>/</span> 个人主页
+            </div>
+
+            <h1 class="hero-name">王嘉琪</h1>
+            <div class="hero-divider"></div>
+
+            <div class="hero-meta">
+                <div><span class="label">专业 //</span> 应用物理学 · 大一</div>
+                <div><span class="label">兴趣 //</span> 物理建模 / 计算机 / 游戏与设计</div>
+                <div><span class="label">状态 //</span> 正在构建自己的知识栈</div>
+            </div>
+
+            <div class="hero-bottom-line"></div>
+        </header>
+
+        <!-- ========== 第二屏：关于我 ========== -->
+        <section class="section" id="about">
+            <div class="section-label">关于我</div>
+
+            <div class="code-block">
+                <span class="comment">// 一种用代码注释写成的自我介绍</span><br><br>
+                <span class="keyword">const</span> major = <span class="string">"应用物理学"</span>;
+                <span class="comment">// 它训练我如何提出问题、建立模型、验证结论</span><br><br>
+                <span class="keyword">let</span> skill = <span class="string">"Python + HTML + Vibe Coding"</span>;
+                <span class="comment">// 它给我把想法变成最小可用产品的能力</span><br><br>
+                <span class="keyword">function</span> <span class="string">curiosity</span>();
+                <span class="comment">// 输入一个物理现象，输出一段模拟程序</span><br><br>
+                <span class="keyword">const</span> target = <span class="string">"社团"</span>;
+                <span class="comment">// 想在一个真实协作的环境里，让这些变量开始交互</span>
+            </div>
+        </section>
+
+        <!-- ========== 第三屏：技能栈 ========== -->
+        <section class="section" id="skills">
+            <div class="section-label">技能栈</div>
+
+            <div class="stack-layer">
+                <div class="stack-level">L1 · 正在深入</div>
+                <div class="stack-content">
+                    Python（小项目开发）<span class="sep">/</span> 数据结构入门 <span class="sep">/</span> 算法入门
+                </div>
+            </div>
+
+            <div class="stack-layer">
+                <div class="stack-level">L2 · 会用的工具</div>
+                <div class="stack-content">
+                    HTML <span class="sep">/</span> Vibe Coding <span class="sep">/</span> Git（基本使用）<span class="sep">/</span> LaTeX <span class="sep">/</span> Markdown
+                </div>
+            </div>
+
+            <div class="stack-layer">
+                <div class="stack-level">L3 · 物理侧能力</div>
+                <div class="stack-content">
+                    微积分 <span class="sep">/</span> 线性代数 <span class="sep">/</span> 物理建模思维
+                </div>
+            </div>
+
+            <div class="stack-layer">
+                <div class="stack-level">Cache · 近期在学</div>
+                <div class="stack-content">
+                    网页布局与交互 <span class="sep">/</span> 游戏逻辑设计 <span class="sep">/</span> 更多算法
+                </div>
+            </div>
+        </section>
+
+        <!-- ========== 第四屏：项目 ========== -->
+        <section class="section" id="projects">
+            <div class="section-label">项目实践</div>
+
+            <div class="project">
+                <div class="project-title">扫雷游戏 <span class="tag">Python</span></div>
+                <div class="project-meta">
+                    <span class="key">背景</span>：想验证自己对二维列表和随机逻辑的理解。<br>
+                    <span class="key">做法</span>：用 Python 实现命令行版扫雷，包含布雷、展开空格、判定胜负。<br>
+                    <span class="key">结果</span>：能完整运行，边界情况处理正确。
+                </div>
+                <a class="project-link" href="#">[ https://tiebapic.baidu.com/forum/pic/item/60dc08338744ebf8cb6b773a9ff9d72a6159a7dd.jpg?tbpicau=2026-09-18-05_9918d1109491ef23447720acb17d199f ]</a>
+            </div>
+
+            <div class="project">
+                <div class="project-title">作品集网页 <span class="tag">HTML / Vibe Coding</span></div>
+                <div class="project-meta">
+                    <span class="key">背景</span>：需要一个地方展示自己做的零散小项目。<br>
+                    <span class="key">做法</span>：用 HTML 手写结构，配合 Vibe Coding 工具辅助生成样式和交互。<br>
+                    <span class="key">结果</span>：搭建出单页作品集框架，理解了网页布局和响应式的基本逻辑。
+                </div>
+                <a class="project-link" href="#">[ https://tiebapic.baidu.com/forum/pic/item/4ff9f303918fa0ec9bbc7708609759ee3d6ddb61.jpg?tbpicau=2026-09-18-05_afdebc73eb92b94e80ec7ad452188d80 ]</a>
+            </div>
+
+        <!-- ========== 第五屏：动机声明 ========== -->
+        <section class="section" id="motive">
+            <div class="section-label">为什么想加入</div>
+
+            <div class="statement-wrapper">
+                <div class="statement-bar"></div>
+                <div class="statement-text">
+                    物理学给我一个视角：<em>世界可以被拆解成系统，用模型去理解。</em><br><br>
+                    计算机给我一个工具：<em>把这些模型变成可以运行、可以验证的东西。</em><br><br>
+                    我想加入社团，是因为不想一个人在这些概念里打转——<br>
+                    我想和一群人一起做点<em>实际的东西</em>，哪怕是先从一个小工具、一次分享、一段代码开始。<br><br>
+                    我可能不是最强的那个人，但我擅长<em>把一个想法一点点做出来</em>。
+                </div>
+            </div>
+        </section>
+
+        <!-- ========== 第六屏：联系 ========== -->
+        <footer class="contact" id="contact">
+            <a class="contact-email" href="mailto:tushiwang3279156662@outlook.com">tushiwang3279156662@outlook.com</a>
+            <div class="contact-comment">
+                // 期待与你建立连接<br>
+                // 目前状态：可加入 · 可合作 · 可聊天
+            </div>
+        </footer>
+
+    </div>
+
+</body>
+</html>
